@@ -18,7 +18,7 @@ session = session_client.session_path(project_id, session_id)
 
 
 @dp.message_handler()
-def start(message):
+async def start(message):
     text = message.text
 
     text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
@@ -27,4 +27,8 @@ def start(message):
     request={"session": session, "query_input": query_input}
     )
 
-    message.answer(response.query_result.fulfillment_text)
+    await message.answer(response.query_result.fulfillment_text)
+
+
+if __name__ == '__main__':
+    executor.start_polling(dp)
