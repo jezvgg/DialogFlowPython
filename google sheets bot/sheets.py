@@ -17,7 +17,14 @@ class sheets:
     def BookstoText(self, df):
         result = 'Могу порекомендовать:\n'
         for i in range(len(df['Название'])):
-            result += f'{i+1}. {df["Название"].iloc[i]}\nАвтор: {df["Автор"].iloc[i]}\nЖанры: {df["Жанр"].iloc[i]}\n'
+            result += f'{i+1}. {df["Название"].iloc[i]}\nАвтор: {df["Автор"].iloc[i]}\nЖанры: {df["Жанр"].iloc[i]}\n\n'
+        return result
+
+
+    def MoviestoText(self,df):
+        result = 'Могу порекомендовать:\n'
+        for i in range(len(df['Название фильма'])):
+            result += f'{i+1}. {df["Название фильма"].iloc[i]}\nЭмоции: {df["Эмоция"].iloc[i]}\nЖанры: {df["Жанр"].iloc[i]}\n\n'
         return result
 
 
@@ -30,3 +37,15 @@ class sheets:
             df = df.sort_values('Общая оценка').head(3)
         return self.BookstoText(df)
     
+
+    def get_movies(self, genre, emotions):
+        df = self.movies.get_as_df()
+        if genre and emotions:
+            df = df[df['Жанр'].apply(lambda x: genre in x)]
+            df = df[df['Эмоция'].apply(lambda x: emotions in x)]
+        elif genre:
+            df = df[df['Жанр'].apply(lambda x: genre in x)]
+        elif emotions:
+            df = df[df['Эмоция'].apply(lambda x: emotions in x)]
+        df = df.sort_values('Рейтинг фильма').head(3)
+        return  self.MoviestoText(df)
