@@ -15,9 +15,10 @@ sheet = sheets(settings)
 async def main(message):
     result = response(settings, message.text)
     params = dict(result.query_result.parameters)
-    if len(params)==1: # книга
+    intent = result.query_result.intent.display_name
+    if intent == 'Совет книги': # книга
         await message.answer(sheet.get_books(params['genres']))
-    elif len(params)==2:
+    elif intent == 'Совет фильма':
         await message.answer(sheet.get_movies(params['genres'], params['emortions']))
     else:
         await message.answer(result.query_result.fulfillment_text)

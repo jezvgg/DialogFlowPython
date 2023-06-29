@@ -32,9 +32,9 @@ class sheets:
         df = self.books.get_as_df()
         df = df.drop(columns=['Индекс', ''])
         if genre != '':
-            df = df[df['Жанр'].apply(lambda x: genre in x)].sort_values('Общая оценка').head(3)
+            df = df[df['Жанр'].apply(lambda x: genre in x)].sort_values('Общая оценка', ascending=False).head(3)
         else:
-            df = df.sort_values('Общая оценка').head(3)
+            df = df.sort_values('Общая оценка', ascending=False).head(3)
         return self.BookstoText(df)
     
 
@@ -47,5 +47,5 @@ class sheets:
             df = df[df['Жанр'].apply(lambda x: genre in x)]
         elif emotions:
             df = df[df['Эмоция'].apply(lambda x: emotions in x)]
-        df = df.sort_values('Рейтинг фильма').head(3)
+        df = df.sort_values('Рейтинг фильма', ascending=False).head(3)
         return  self.MoviestoText(df)
