@@ -16,6 +16,7 @@ class sheets:
 
     def BookstoText(self, df):
         result = 'Могу порекомендовать:\n'
+        if len(df['Название']) == 0: return 'Извини, но таких книг я тебе порекомендовать не могу, я их не знаю.'
         for i in range(len(df['Название'])):
             result += f'{i+1}. {df["Название"].iloc[i]}\nАвтор: {df["Автор"].iloc[i]}\nЖанры: {df["Жанр"].iloc[i]}\n\n'
         return result
@@ -23,6 +24,7 @@ class sheets:
 
     def MoviestoText(self,df):
         result = 'Могу порекомендовать:\n'
+        if len(df['Название фильма']) == 0: return 'Извини, но таких книг я тебе порекомендовать не могу, я их не знаю.'
         for i in range(len(df['Название фильма'])):
             result += f'{i+1}. {df["Название фильма"].iloc[i]}\nЭмоции: {df["Эмоция"].iloc[i]}\nЖанры: {df["Жанр"].iloc[i]}\n\n'
         return result
