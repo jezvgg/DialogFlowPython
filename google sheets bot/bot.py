@@ -18,7 +18,7 @@ async def main(message):
     intent = result.query_result.intent.display_name
     if intent == 'Совет книги': # книга
         await message.answer(sheet.get_books(params['genres']))
-    elif intent == 'Совет фильма':
+    elif intent == 'Совет фильма': # фильм
         await message.answer(sheet.get_movies(params['genres'], params['emortions']))
     else:
         await message.answer(result.query_result.fulfillment_text)
