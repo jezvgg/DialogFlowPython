@@ -2,6 +2,9 @@ import pygsheets
 import pandas as pd
 
 class sheets:
+    '''
+    Класс для работы с Google Sheets.
+    '''
     __sheets = None
     books = None
     movies = None
@@ -14,7 +17,10 @@ class sheets:
         self.movies = sheet2.sheet1
 
 
-    def BookstoText(self, df):
+    def BookstoText(self, df: pd.DataFrame) -> str:
+        '''
+        Класс для обработки таблицы про книги. Возращает ответ для пользователя.
+        '''
         result = 'Могу порекомендовать:\n'
         if len(df['Название']) == 0: return 'Извини, но таких книг я тебе порекомендовать не могу, я их не знаю.'
         for i in range(len(df['Название'])):
@@ -22,7 +28,10 @@ class sheets:
         return result
 
 
-    def MoviestoText(self,df):
+    def MoviestoText(self,df: pd.DataFrame) -> str:
+        '''
+        Класс для обработки таблицы про фильмы. Возращает ответ для пользователя.
+        '''
         result = 'Могу порекомендовать:\n'
         if len(df['Название фильма']) == 0: return 'Извини, но таких книг я тебе порекомендовать не могу, я их не знаю.'
         for i in range(len(df['Название фильма'])):
@@ -30,7 +39,11 @@ class sheets:
         return result
 
 
-    def get_books(self, genre):
+    def get_books(self, genre: str = '') -> str:
+        '''
+        Обращается к Google Sheets. Обрабатывает таблицу и конверитурет в DataFrame, после чего фильтрует
+        по жанру (если передан). Возращает ответ для пользователя.
+        '''
         df = self.books.get_as_df()
         df = df.drop(columns=['Индекс', ''])
         if genre != '':
@@ -40,7 +53,11 @@ class sheets:
         return self.BookstoText(df)
     
 
-    def get_movies(self, genre, emotions):
+    def get_movies(self, genre:str = '', emotions:str = '') -> str:
+        '''
+        Обращается к Google Sheets. Обрабатывает таблицу и конверитурет в DataFrame, после чего фильтрует
+        по жанру или эмоции (если передан). Возращает ответ для пользователя.
+        '''
         df = self.movies.get_as_df()
         if genre and emotions:
             df = df[df['Жанр'].apply(lambda x: genre in x)]
