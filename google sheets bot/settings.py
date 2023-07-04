@@ -14,6 +14,8 @@ class settings:
     project_id = ''
     session_id = ''
     language = ''
+    counter = 0
+    last_params = 0
 
     def __init__(self, settings_url):
 

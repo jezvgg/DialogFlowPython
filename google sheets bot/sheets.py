@@ -39,7 +39,7 @@ class sheets:
         return result
 
 
-    def get_books(self, genre: str = '') -> str:
+    def get_books(self, genre: str = '', index: int = 0) -> str:
         '''
         Обращается к Google Sheets. Обрабатывает таблицу и конверитурет в DataFrame, после чего фильтрует
         по жанру (если передан). Возращает ответ для пользователя.
@@ -49,11 +49,11 @@ class sheets:
         if genre != '':
             df = df[df['Жанр'].apply(lambda x: genre in x)].sort_values('Общая оценка', ascending=False).head(3)
         else:
-            df = df.sort_values('Общая оценка', ascending=False).head(3)
+            df = df.sort_values('Общая оценка', ascending=False)[index,index+3]
         return self.BookstoText(df)
     
 
-    def get_movies(self, genre:str = '', emotions:str = '') -> str:
+    def get_movies(self, genre: str = '', emotions: str = '', index: int = 0) -> str:
         '''
         Обращается к Google Sheets. Обрабатывает таблицу и конверитурет в DataFrame, после чего фильтрует
         по жанру или эмоции (если передан). Возращает ответ для пользователя.
@@ -66,5 +66,5 @@ class sheets:
             df = df[df['Жанр'].apply(lambda x: genre in x)]
         elif emotions:
             df = df[df['Эмоция'].apply(lambda x: emotions in x)]
-        df = df.sort_values('Рейтинг фильма', ascending=False).head(3)
+        df = df.sort_values('Рейтинг фильма', ascending=False)[index, index+3]
         return  self.MoviestoText(df)

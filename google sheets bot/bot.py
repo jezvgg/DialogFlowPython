@@ -18,10 +18,21 @@ async def main(message):
     intent = result.query_result.intent.display_name # Интент, который определил DialogFlow
     if intent == 'Совет книги': 
         await message.answer(sheet.get_books(params['genres']))
+        settings.last_params = params
+        settings.counter = 0
     elif intent == 'Совет фильма': 
         await message.answer(sheet.get_movies(params['genres'], params['emortions']))
+        settings.last_params = params
+        settings.counter = 0
+    elif intent == 'а ещё фильмы':
+        settings.counter += 1
+        await message.answer(sheet.get_movies(settings.last_params['genres'], settings.last_params['emortions']))
+    elif intent == 'ещё книги':
+        settings.counter += 1
+        await message.answer(sheet.get_movies(settings.last_params['genres']))
     else:
         await message.answer(result.query_result.fulfillment_text) # Если не нужен совет, то отвечает DialogFlow, иначе мы сами отвечаем.
+        settings.counter = 0
 
 if __name__ == '__main__':
     executor.start_polling(dp) # Запуск бота
