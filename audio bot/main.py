@@ -24,8 +24,6 @@ session = session_client.session_path(project_id, session_id)
 
 @dp.message_handler(content_types=[ContentType.VOICE])
 async def audio(message):
-
-
     file_id = await bot.get_file(message.voice.file_id)
     print(file_id.file_path)
     await bot.download_file(file_id.file_path, 'audio.oga')
@@ -33,25 +31,13 @@ async def audio(message):
 
     data, sample = sf.read('audio.oga')
     sf.write('audio.wav', data, sample)
-    # AudioSegment.from_file('audio.oga').export('audio.mp3', format='mp3')
-    # process = subprocess.run(['ffmpeg', '-i', 'audio.oga', 'audio.wav'])
-    
+    print('Audio exported to WAV')
 
     recognaizer = s_r.Recognizer()
-
-
     audio_file = s_r.AudioFile('audio.wav')
-
-
-
-    print('debug1')
     with audio_file as source:
         recognaizer.adjust_for_ambient_noise(source)
         recorded_audio = recognaizer.record(source)
-    print('debug2')
-
-
-
     try:
         text = recognaizer.recognize_google(
             recorded_audio,
@@ -60,9 +46,17 @@ async def audio(message):
         print(text)
     except Exception as ex:
         print(ex)
-
     os.remove('audio.oga')
     os.remove('audio.wav')
+    print('Audio recognized')
+    
+    text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
+    query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
+    response = session_client.detect_intent(
+    request={"session": session, "query_input": query_input}
+    )
+
+    await bot.send_message(chat_id=message.chat.id,text=response.query_result.fulfillment_text)
 
 
 @dp.message_handler(content_types=[ContentType.TEXT])
