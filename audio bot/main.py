@@ -2,8 +2,11 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import ContentType
 from google.cloud import dialogflow
 import speech_recognition as s_r
+import soundfile as sf
+from pydub import AudioSegment
 from pathlib import Path
 import json
+import os
 
 settings_file = open(Path('settings.json')) # Загружаем json файл с настройками
 settings = json.load(settings_file)
@@ -21,22 +24,45 @@ session = session_client.session_path(project_id, session_id)
 
 @dp.message_handler(content_types=[ContentType.VOICE])
 async def audio(message):
-    print('audio detected')
-    file = await bot.get_file(message.voice.file_id)
-    audio_file = s_r.AudioFile(file.file_path)
+
+
+    file_id = await bot.get_file(message.voice.file_id)
+    print(file_id.file_path)
+    await bot.download_file(file_id.file_path, 'audio.oga')
+    print('Audio saved')
+
+    data, sample = sf.read('audio.oga')
+    sf.write('audio.wav', data, sample)
+    # AudioSegment.from_file('audio.oga').export('audio.mp3', format='mp3')
+    # process = subprocess.run(['ffmpeg', '-i', 'audio.oga', 'audio.wav'])
+    
+
     recognaizer = s_r.Recognizer()
-    print('audio detected')
+
+
+    audio_file = s_r.AudioFile('audio.wav')
+
+
+
+    print('debug1')
     with audio_file as source:
-        recorded_audio = recognaizer.listen(source)
+        recognaizer.adjust_for_ambient_noise(source)
+        recorded_audio = recognaizer.record(source)
+    print('debug2')
+
+
 
     try:
         text = recognaizer.recognize_google(
             recorded_audio,
-            language='ru'
+            language='ru-RU'
         )
         print(text)
     except Exception as ex:
         print(ex)
+
+    os.remove('audio.oga')
+    os.remove('audio.wav')
 
 
 @dp.message_handler(content_types=[ContentType.TEXT])
