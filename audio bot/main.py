@@ -3,7 +3,6 @@ from aiogram.types import ContentType
 from google.cloud import dialogflow
 import speech_recognition as s_r
 import soundfile as sf
-from pydub import AudioSegment
 from pathlib import Path
 import json
 import os
