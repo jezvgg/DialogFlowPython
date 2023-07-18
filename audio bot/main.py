@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import ContentType
 from google.cloud import dialogflow
 import speech_recognition as s_r
+from gtts import gTTS
 import soundfile as sf
 from pathlib import Path
 import json
@@ -37,23 +38,32 @@ async def audio(message):
     with audio_file as source:
         recognaizer.adjust_for_ambient_noise(source)
         recorded_audio = recognaizer.record(source)
-    try:
-        text = recognaizer.recognize_google(
-            recorded_audio,
-            language='ru-RU'
-        )
-        print(text)
-    except Exception as ex:
-        print(ex)
+    print('Audio cleaned')
+    text = recognaizer.recognize_google(
+        recorded_audio,
+         language='ru-RU'
+     )
+    print(text)
+    # except Exception as ex:
+    #     print(ex)
+    print('Audio recognized')
     os.remove('audio.oga')
     os.remove('audio.wav')
-    print('Audio recognized')
     
     text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
     query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
     response = session_client.detect_intent(
     request={"session": session, "query_input": query_input}
     )
+
+
+    text_output = response.query_result.fulfillment_text
+    obj = gTTS(text = text_output, lang='ru', slow=False)
+    obj.save('output.mp3')
+    output = open('output.mp3', 'rb')
+    await bot.send_audio(chat_id=message.chat.id, audio=output)
+    output.close()
+    os.remove('output.mp3')
 
     await bot.send_message(chat_id=message.chat.id,text=response.query_result.fulfillment_text)
 
