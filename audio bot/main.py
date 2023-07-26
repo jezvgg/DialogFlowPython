@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher, executor
 from aiogram.types import ContentType
 from google.cloud import dialogflow
 import speech_recognition as s_r
+import assemblyai as aai
 from gtts import gTTS
 import soundfile as sf
 from pathlib import Path
@@ -33,22 +34,28 @@ async def audio(message):
     sf.write('audio.wav', data, sample)
     print('Audio exported to WAV')
 
-    recognaizer = s_r.Recognizer()
-    audio_file = s_r.AudioFile('audio.wav')
-    with audio_file as source:
-        recognaizer.adjust_for_ambient_noise(source)
-        recorded_audio = recognaizer.record(source)
-    print('Audio cleaned')
-    text = recognaizer.recognize_google(
-        recorded_audio,
-         language='ru-RU'
-     )
-    print(text)
+    aai.settings.api_key = "f66d0f4cef26414a88738ccc19545063"
+    transcriber = aai.Transcriber()
+    transcript = transcriber.transcribe("audio.wav")
+
+    # recognaizer = s_r.Recognizer()
+    # audio_file = s_r.AudioFile('audio.wav')
+    # with audio_file as source:
+    #     recognaizer.adjust_for_ambient_noise(source)
+    #     recorded_audio = recognaizer.record(source)
+    # print('Audio cleaned')
+    # text = recognaizer.recognize_wit(
+    #     recorded_audio
+    #  )
+    # print(text)
     # except Exception as ex:
     #     print(ex)
+
+    text = transcript.text
+    print(text)
     print('Audio recognized')
     os.remove('audio.oga')
-    os.remove('audio.wav')
+    #os.remove('audio.wav')
     
     text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
     query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
