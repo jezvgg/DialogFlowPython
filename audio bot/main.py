@@ -14,8 +14,8 @@ settings = json.load(settings_file)
 bot = Bot(token=settings['bot-token'])
 dp = Dispatcher(bot)
 
-project_id = settings['project_id'] # Записываем настройки
-session_id = settings['session_id']
+project_id = settings['project-id'] # Записываем настройки
+session_id = settings['session-id']
 language = settings['language']
 
 session_client = dialogflow.SessionsClient()                # Создание сессии
@@ -37,12 +37,19 @@ async def audio(message):
     audio_file = s_r.AudioFile('audio.wav')
     with audio_file as source:
         recognaizer.adjust_for_ambient_noise(source)
-        recorded_audio = recognaizer.record(source)
+        recorded_audio = recognaizer.listen(source)
     print('Audio cleaned')
-    text = recognaizer.recognize_google(
-        recorded_audio
+
+    alt = recognaizer.recognize_google(
+        recorded_audio,
+        language='ru-RU',
+        show_all=True
      )
-    print(text)
+    try:
+        text = alt['alternative'][0]['transcript']
+    except TypeError:
+        print('typeError')
+        text = 'Не получилось разобрать аудиосообщение, отправитье пожалуйста ещё раз. Желательно с задержкой в начале.'
 
     print('Audio recognized')
     os.remove('audio.oga')
