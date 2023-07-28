@@ -2,39 +2,34 @@ from aiogram import Bot, Dispatcher, executor
 from google.cloud import dialogflow
 from geopy.geocoders import Nominatim
 from pyowm import OWM
+from ..utils.dialogflow import DialogFlowHelper
 from pathlib import Path
 import json
 
-settings_file = open(Path('settings.json')) # Загружаем json файл с настройками
-settings = json.load(settings_file)
 
-bot = Bot(token=settings['bot-token']) # Создаём бота
+# Upload settings file
+settings_file = open(Path('settings.json'))
+settings = json.load(settings_file)
+helper = DialogFlowHelper(settings='settings.json')
+
+
+bot = Bot(token=settings['bot-token'])
 dp = Dispatcher(bot)
 
-owm = OWM(settings['owm-key']) # Создаём менеджер для работы с OWM Api
+# Manager for work with OpenWeatherMap
+owm = OWM(settings['owm-key'])
 manager = owm.weather_manager()
-geolocator = Nominatim(user_agent='weather-bot') # Для перевода из строки в ширину и долготу, для погоды
+geolocator = Nominatim(user_agent='weather-bot') # For convert to longitude and latitude
 
-project_id = settings['project_id'] # Записываем настройки
-session_id = settings['session_id']
-language = settings['language']
-
-session_client = dialogflow.SessionsClient()                # Создание сессии
-session = session_client.session_path(project_id, session_id)
 
 @dp.message_handler()
 async def start(message):
+    # Same response that in simple example
     text = message.text
-
-    text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
-    query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
-
-    response = session_client.detect_intent(
-    request={"session": session, "query_input": query_input}
-    )
+    response = helper.response(text=text)
 
     if response.query_result.intent.display_name == "погода" and response.query_result.all_required_params_present:
-        city = dict(dict(response.query_result.parameters)['location'])['city']
+        city = dict(dict(response.query_result.parameters)['location'])['city'] # Take city parameter from DF response
         location = geolocator.geocode(city)
         weather_location = manager.weather_at_coords(location.latitude, location.longitude)
         weather = weather_location.weather
@@ -42,7 +37,7 @@ async def start(message):
         await message.answer(answer)
 
     else:
-        await message.answer(response.query_result.fulfillment_text)
+        await message.answer(response.query_result.fulfillment_text) # Not asking for a weather
 
 
 if __name__ == '__main__':

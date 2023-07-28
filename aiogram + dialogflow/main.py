@@ -3,26 +3,25 @@ from google.cloud import dialogflow
 from pathlib import Path
 import json
 
-settings_file = open(Path('settings.json')) # Загружаем json файл с настройками
+# upload settings file
+settings_file = open(Path('settings.json'))
 settings = json.load(settings_file)
 
 bot = Bot(token=settings['bot-token'])
 dp = Dispatcher(bot)
 
-project_id = settings['project_id'] # Записываем настройки
-session_id = settings['session_id']
-language = settings['language']
-
-session_client = dialogflow.SessionsClient()                # Создание сессии
-session = session_client.session_path(project_id, session_id)
+# create session to work with DialogFlow
+session_client = dialogflow.SessionsClient()                
+session = session_client.session_path(settings['project_id'] , settings['session_id'])
 
 
 @dp.message_handler()
 async def start(message):
     text = message.text
 
-    text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
-    query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
+    # response from simple example
+    text_input = dialogflow.TextInput(text=text, language_code="RU")
+    query_input = dialogflow.QueryInput(text=text_input)
     response = session_client.detect_intent(
     request={"session": session, "query_input": query_input}
     )

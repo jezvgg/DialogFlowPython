@@ -7,83 +7,50 @@ import soundfile as sf
 from pathlib import Path
 import json
 import os
+from speech import STT, TTS
+from dialogflow import DialogFlowHelper
 
-settings_file = open(Path('settings.json')) # Загружаем json файл с настройками
+
+# Upload settings files
+settings_file = open(Path('settings.json'))
 settings = json.load(settings_file)
+helper = DialogFlowHelper(settings='settings.json')
+
 
 bot = Bot(token=settings['bot-token'])
 dp = Dispatcher(bot)
 
-project_id = settings['project-id'] # Записываем настройки
-session_id = settings['session-id']
-language = settings['language']
-
-session_client = dialogflow.SessionsClient()                # Создание сессии
-session = session_client.session_path(project_id, session_id)
-
 
 @dp.message_handler(content_types=[ContentType.VOICE])
 async def audio(message):
+    # Download audio file
     file_id = await bot.get_file(message.voice.file_id)
     print(file_id.file_path)
     await bot.download_file(file_id.file_path, 'audio.oga')
     print('Audio saved')
 
-    data, sample = sf.read('audio.oga')
-    sf.write('audio.wav', data, sample)
-    print('Audio exported to WAV')
-
-    recognaizer = s_r.Recognizer()
-    audio_file = s_r.AudioFile('audio.wav')
-    with audio_file as source:
-        recognaizer.adjust_for_ambient_noise(source)
-        recorded_audio = recognaizer.listen(source)
-    print('Audio cleaned')
-
-    alt = recognaizer.recognize_google(
-        recorded_audio,
-        language='ru-RU',
-        show_all=True
-     )
-    try:
-        text = alt['alternative'][0]['transcript']
-    except TypeError:
-        print('typeError')
-        text = 'Не получилось разобрать аудиосообщение, отправитье пожалуйста ещё раз. Желательно с задержкой в начале.'
-
-    print('Audio recognized')
-    os.remove('audio.oga')
-    os.remove('audio.wav')
+    # Speech-to-Text convertation
+    text = STT('audio.oga')
     
-    text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
-    query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
-    response = session_client.detect_intent(
-    request={"session": session, "query_input": query_input}
-    )
+    # Response for DialogFlow ( same in simple example )
+    text_output = helper.response_for_text(text=text)
 
+    # Text-to-Speech convertation
+    audio_path = TTS(text=text_output)
 
-    text_output = response.query_result.fulfillment_text
-    obj = gTTS(text = text_output, lang='ru', slow=False)
-    obj.save('output.mp3')
-    output = open('output.mp3', 'rb')
-    await bot.send_audio(chat_id=message.chat.id, audio=output)
-    output.close()
-    os.remove('output.mp3')
-
-    await bot.send_message(chat_id=message.chat.id,text=response.query_result.fulfillment_text)
+    # Send Speech of response
+    with open(audio_path, 'rb') as output:
+        await bot.send_audio(chat_id=message.chat.id, audio=output)
+    os.remove(audio_path)
+    await bot.send_message(chat_id=message.chat.id,text=text_output)
 
 
 @dp.message_handler(content_types=[ContentType.TEXT])
 async def start(message):
     text = message.text
     print('audio not detected')
-    text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
-    query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
-    response = session_client.detect_intent(
-    request={"session": session, "query_input": query_input}
-    )
 
-    await bot.send_message(chat_id=message.chat.id,text=response.query_result.fulfillment_text)
+    await bot.send_message(chat_id=message.chat.id,text=helper.response_for_text(text=text))
 
 
 if __name__ == '__main__':
