@@ -1,31 +1,26 @@
 from aiogram import Bot, Dispatcher, executor
-from google.cloud import dialogflow
+from dialogflow import DialogFlowHelper
 from pathlib import Path
 import json
 
-settings_file = open(Path('settings.json')) # Загружаем json файл с настройками
+
+# Upload settings file
+settings_file = open(Path('settings.json'))
 settings = json.load(settings_file)
+helper = DialogFlowHelper('settings.json')
+
 
 bot = Bot(token=settings['bot-token'])
 dp = Dispatcher(bot)
 
-project_id = settings['project_id'] # Записываем настройки
-session_id = settings['session_id']
-language = settings['language']
-
-session_client = dialogflow.SessionsClient()                # Создание сессии
-session = session_client.session_path(project_id, session_id)
 
 @dp.message_handler()
 async def start(message):
+    # Same response as simple example
     text = message.text
+    response = helper.response(text=text)
 
-    text_input = dialogflow.TextInput(text=text, language_code=language) # Ввод текста
-    query_input = dialogflow.QueryInput(text=text_input) # Запрос к агенту по тексту
-    response = session_client.detect_intent(
-    request={"session": session, "query_input": query_input}
-    )
-    res = ""
+    # Getting custom payload and parsing him for images
     if len(response.query_result.fulfillment_messages) != 0:
         payload = dict(response.query_result.fulfillment_messages[1].payload)
         res = payload['url']
